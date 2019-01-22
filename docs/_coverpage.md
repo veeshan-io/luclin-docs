@@ -5,12 +5,9 @@
 
 # Luclin <small>4play</small>
 
-> Enhance your development in laravel.
+> Enhance your development in PlayFramework.
 
-- 基于模块组织你的业务
-- 规范输入输出
-- 无所不至的LUri全局资源调用
-- 更多便利特性，实现开箱即用的企业级支持
+- under developing..
 
 <!-- [GitHub](https://github.com/LXTechnic/luclin) -->
 [Get Started](#Luclin-Documents)
