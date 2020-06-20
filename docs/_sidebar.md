@@ -1,4 +1,3 @@
 <!-- docs/_sidebar.md -->
 
-- [Module System](module.md)
-- [Command Line](command.md)
+- [使用函数式编程](fp.md)

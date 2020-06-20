@@ -9,7 +9,7 @@
 
 - 函数式编程组件
 - 通用业务层UBL描述
-- 提供LSP交互协议的支持
+- 提供LSP交互协议支持
 
 <!-- [GitHub](https://github.com/veeshan-io/luclin2) -->
 [Get Started](#Luclin2-Documents)
