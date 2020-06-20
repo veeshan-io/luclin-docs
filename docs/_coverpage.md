@@ -3,14 +3,16 @@
 <!-- ![logo](_media/luclin.svg) -->
 <img src="_media/luclin.svg" width = "30%" height = "30%" alt="Luclin Logo" align=center />
 
-# Luclin <small>4play</small>
+# Luclin <small>version 2</small>
 
-> Enhance your development in PlayFramework.
+> Enhance your PHP development experience.
 
-- under developing..
+- 函数式编程组件
+- 通用业务层UBL描述
+- 提供LSP交互协议的支持
 
-<!-- [GitHub](https://github.com/LXTechnic/luclin) -->
-[Get Started](#Luclin-Documents)
+<!-- [GitHub](https://github.com/veeshan-io/luclin2) -->
+[Get Started](#Luclin2-Documents)
 
 <!-- It's not work.. -->
 
