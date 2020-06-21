@@ -380,8 +380,8 @@ implicit('any')
     ->test(fn($case, $a, $b, $c, $d, $e) => $case().": $a,$b,$c,$d,$e");
 $case = casing('some', 'params');
 $test = into($case->test);
-$test->into(1);
-$test->into(2, 3);
+$test = $test->into(1);
+$test = $test->into(2, 3);
 $result = $test->into(4, 5)(); // $result = "params: 1,2,3,4,5"
 ```
 
