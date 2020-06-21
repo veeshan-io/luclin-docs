@@ -378,7 +378,7 @@ Luclin2中提供了简便currying，其目的是当一个段业务需要连续�
 ```php
 implicit('any')
     ->test(fn($case, $a, $b, $c, $d, $e) => $case().": $a,$b,$c,$d,$e");
-$case = casing('some', 'params');
+$case = casing('any', 'params');
 $test = into($case->test);
 $test = $test->into(1);
 $test = $test->into(2, 3);
