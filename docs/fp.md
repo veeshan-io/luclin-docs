@@ -284,6 +284,14 @@ implicit('string')
 
 完美搞定，这样当调用不存在的隐式方法时就会去找Str处理，再报错就交给框架了。当然这部分也可以写得很细，比如同时支持多个基础库方法，或是自定义报错类型，这都是可以在一个函数内处理的事——一个不行就两个😎
 
+### 隐式方法保留字
+
+以下名称因为被case方法或属性上占用所以不能用于隐式方法名：
+
+- type
+- by
+- is
+
 ## 使用函子 Functor
 
 Luclin2的函数库提供的函子支持相对狭义，其主要目标是能把一个函数`fn(x) => y`应用到一个群上。那么这个群通常来说可以理解为一个集合，或是一个字典，等等等等。因此在Luclin2中，将Functor拆解成两个部分：函数`function`与解包器`handler`
@@ -303,11 +311,86 @@ $user->name = 'Triss';
 echo casing('user', $user)->nameLengthTimes(5)(); // output 25
 ```
 
+对单个模型赋与业务的工作便完成了，那么对于集合呢？每种相对外部的系统提供的接口都会有所区别，上面通过一个隐式方法实现了原有函数与User Model之间的桥接。那么对于一个集合，或者说某种特殊“群”的桥接，则需要提供`handler`进行解包。
 
+在这里Luclin2对PHP优质库中最常见的可迭代集合（iterable collection）提供了一个非常方便的handler生成器`thought()`函数：
 
-result
-thought
-functor
+```php
+class User {
+    public string $name;
+
+    public function __consturct(string $name) {
+        $this->name = $name;
+    }
+}
+
+$collect = collect([
+  new User('Triss'),
+  new User('Mary'),
+  new User('Lucy'),
+]);
+
+$thought = thought('user');
+
+foreach ($thought($collect) as $key => $case) {
+    echo $case->nameLengthTimes(5)();
+}
+// output 25 20 20
+```
+
+`thought()`方法生成一个闭包，该闭包接收一个`iterable`类型的数据，然后生成迭代器进行遍历，并将集合中每个单元作为指定type的case抛出。
+
+那么有了`function`和`handler`，就可以组合出一个`functor`了：
+
+```php
+$functor = functor(fn($case, $factor) => $case->nameLengthTimes($factor),
+    throught('user'));
+
+$result = result($functor($collect, 5)); // $result = [25, 20, 20]
+```
+
+这里用到的`result()`函数专用于接收一个迭代器，并将迭代器跑完后的输出归纳为一个数组返回。
+
+细心的大佬可能注意到`nameLengthTimes()`返回的应该是个case，之前使用`thought()`跑的时候是多加了`()`才得到值的，但这里却直接得到了数字。这是因为`result()`默认情况下会检测返回的是不是case，是的话直接解包取值了。如果不要自解包可以给第二个参数`false`。
+
+至此我们的函子已经可以用了，为了方便一些可以直接把functor作为隐式方法声明给User Collection：
+
+```php
+implicit('users')
+    ->nameLengthTimes(functor(fn($case, $factor)
+            => $case->nameLengthTimes($factor),
+        throught('user'));
+
+$result = result(casing('users', $collect)->nameLengthTimes(5));
+```
+
+隐式方法直接接收一个functor其实是存在问题的，implicit相关代码中做了特别处理，会识别`funcs`中的第一个函数是否为functor，有的话会做次封装以减少重复代码量。但考虑到效率问题和普适性，只处理第一个函数，要设置多个函子请自行做层封装，类似这样：
+
+```php
+fn($case, $factor) =>
+  (functor(fn($case, $factor) => $case->nameLengthTimes($factor))($case, $factor)
+```
 
 ## 柯里化 Currying
 
+Luclin2中提供了简便currying，其目的是当一个段业务需要连续传入多个参数才能运行时，可以在一开始确定要执行的方法，然后这些参数可以在不同的地方进行确认、赋与，集齐后再执行。使用`into()`函数/方法来实现，看起来非常简单：
+
+```php
+implicit('any')
+    ->test(fn($case, $a, $b, $c, $d, $e) => $case().": $a,$b,$c,$d,$e");
+$case = casing('some', 'params');
+$test = into($case->test);
+$test->into(1);
+$test->into(2, 3);
+$result = $test->into(4, 5)(); // $result = "params: 1,2,3,4,5"
+```
+
+这里要展示的是如何获取一个固化case的该case下隐式方法，如果调用`test`方法是`$case->test()`，那么获取该方法就是`$test = $case->test`，作为属性赋值即可。
+
+上面是柯里化在case中的应用，但其设计本身是具有泛用性的，所以对绝大多数php中的方法/函数调用都具备可操作性。这里比较推荐的一种形态是PHP5.5版本之后支持的数组形态闭包声明：
+
+```php
+$test = into([$case, 'test']);
+```
+
+这和上面的结果是一样的，也适用于非case类。至于更复杂的调用，如果对php各种动态调用方式不够熟悉的话，也可以自行编写一个闭包传进去来调用。
