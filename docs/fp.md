@@ -42,30 +42,24 @@ $case = casing('times', 1, fn($v, int $factor) => $v * $factor);
 $tripled = $case(3); // $tripled = 3
 ```
 
-**case不可以被嵌套**，因此当一个case作为值被放入另一个case中时，会解包原来的case中的value。这可以用于做便捷的case type转换：
+case可以被嵌套，但是当一个case自解包时，如果其包含的值也是一个case，会递归一层层解包所有嵌套的case。因此你无法通过自解包获取中间的case。该特性的作用之一是可以用于做便捷的case type转换：
 
 ```php
-$caseA = case('a', 100, fn($v) => $v * 10);
-$caseB = case('b', $caseA);
+$caseA = casing('a', 100, fn($v) => $v * 10);
+$caseB = casing('b', $caseA);
 $newValue = $caseB(); // $newValue = 1000, not $caseA
 ```
 
-> 当确实需要要一个case的处理函数中把值作为另一个case进行操作时，请在处理函数中自行调用`casing()`函数转换。
-
-可以基于一个case进行继承创建，新的case会继承老case的type，计算后value以及处理函数：
+可以基于一个case进行继承创建，新的case会继承老case的type，原case以及处理函数。如果在继承创建时给出value，则可以替换原case的值。
 
 ```php
-$case1 = casing('double', 1, fn($v) => $v * 2);
-$case2 = casing($case1);
-$doubled  = $case1(); // $doubled = 2
-$again    = $case2(); // $again = 4
+$power = casing('power', 0, fn($v, $factor) => pow($v, $factor));
+echo casing($power, 2)(4); // output 16
 ```
 
-> 注意这里并没有真的去生成一个链式调用，当执行`$case2 = casing($case1)`的时候已经计算过一遍$case1中的值了。
+### 原类型 raw case
 
-### 原始类型 raw case
-
-有时我们只是想把一些基础的类型封装起来以使用函数式编程能力，这时可以使用`raw()`函数对值/变量进行包装。
+有时我们只是想把一些基础的类型封装起来以使用函数式编程能力，或者需要对一个case包含的数据进行解包落地为基础类型，这时可以使用`raw()`函数对值/变量进行包装。
 
 ```php
 $case = raw('hello');
@@ -76,6 +70,8 @@ $case = raw('hello');
 ```php
 function type($var): ?string
 {
+    if ($var instanceof Foundation\CaseClass)
+        return $var->type;
     if (is_string($var))    return "string";
     if (is_numeric($var))   return "numeric";
     if (is_bool($var))      return "boolean";
@@ -86,6 +82,26 @@ function type($var): ?string
     return null;
 }
 ```
+
+注意如果传入的是一个case，那么`casetype`将直接返回该case的case type。
+
+使用`raw()`相较`casing()`还有个差异，如果包含的值是个case，`raw()`会对其解包，也就是说不像`casing()`那样会产生嵌套或懒解包的效果。这可以用于部分需要对嵌套case计算结果落地的场景。
+
+```php
+$counter = casing('counter', -1, fn($v) => ++$v);
+$case = casing($counter); // 此时未计算递增，包含值为 :counter(-1)
+$raw  = raw($counter); // 此时已经计算了递增，包含值为1
+```
+
+虽然无论`casing()`还是`raw()`一般情况下都不能拿到中间值case，但及时数据落地，避免重复计算，对于控制计算量还是比较有帮助的。比如上面的代码就是用`raw()`实现了计数器：
+
+```php
+$counter = casing('counter', -1, fn($v) => ++$v);
+echo ($counter = raw($counter))(); // output 1
+echo ($counter = raw($counter))(); // output 2
+```
+
+> 计数器起点-1是因为当counter被raw包含时counter会先递增1变为0，从raw解包时会再+1，为了方便计数器后续调用（即初始化不计数）起始-1会更方便
 
 !> Luclin2正在开发中，这部分转换规则可能会有所变动，待1.0 release后才会正式固定。欲了解具体计算方式请查看项目中`casetype()`函数源码。
 
@@ -290,7 +306,7 @@ implicit('string')
 
 - type
 - by
-- is
+- fun
 
 ## 使用函子 Functor
 
@@ -370,6 +386,10 @@ $result = result(casing('users', $collect)->nameLengthTimes(5));
 fn($case, $factor) =>
   (functor(fn($case, $factor) => $case->nameLengthTimes($factor))($case, $factor)
 ```
+
+### 自行编写 handler
+
+`handler`只是一个解包用的闭包，`thought()`提供了最常见的**遍历iterable并将每个单元视为某一case type**这一功能。当你有不同的解包需求，或是需要对非iterable类型数据结构做解包时，可以自行编写一个handler，使用闭包或是任何`callable`并生成迭代器的接口即可。
 
 ## 柯里化 Currying
 
