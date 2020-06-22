@@ -131,8 +131,8 @@ echo "$none"; // output ":none"
 对转换后的字串可以直接通过`casing()`函数恢复为case，但不支持对处理函数做恢复：
 
 ```php
-$some = casing('some(100)');
-$none = casing('none');
+$some = casing(':some(100)');
+$none = casing(':none');
 ```
 
 如果case中包含的数据是复杂结构，在序列化的时候该结构自身需要实现`__toString()`方法。而在恢复的时候则需要在该case type下事先注册约定的隐式方法`_restore`，这样当恢复时其解析出来的值会被正确还原：
