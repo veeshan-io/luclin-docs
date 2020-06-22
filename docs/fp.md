@@ -68,7 +68,7 @@ $case = raw('hello');
 这时得到的`case type`是`string`。这个类型分析机制从实用角度出发，与php原生的类型并不完全一致，下面列出当前的转换规则。
 
 ```php
-function type($var): ?string
+function casetype($var): ?string
 {
     if ($var instanceof Foundation\CaseClass)
         return $var->type;
@@ -83,7 +83,7 @@ function type($var): ?string
 }
 ```
 
-注意如果传入的是一个case，那么`casetype`将直接返回该case的case type。
+注意如果传入的是一个case，那么`casetype()`将直接返回该case的case type。
 
 使用`raw()`相较`casing()`还有个差异，如果包含的值是个case，`raw()`会对其解包，也就是说不像`casing()`那样会产生嵌套或懒解包的效果。这可以用于部分需要对嵌套case计算结果落地的场景。
 
@@ -113,7 +113,7 @@ echo ($counter = raw($counter))(); // output 2
 $case1 = raw(1);
 $case2 = casing('numeric', 2);
 
-$case1->is($case2->type); // true
+casetype($case1, $case2); // true
 ```
 
 ### case 的字串化
