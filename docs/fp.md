@@ -384,7 +384,7 @@ $result = result(casing('users', $collect)->nameLengthTimes(5));
 
 ```php
 fn($case, $factor) =>
-  (functor(fn($case, $factor) => $case->nameLengthTimes($factor))($case, $factor)
+    (functor(fn($case, $factor) => $case->nameLengthTimes($factor))($case, $factor)
 ```
 
 ### 自行编写 handler
