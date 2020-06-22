@@ -19,7 +19,7 @@ $some = casing('some');
 $none = casing('none');
 ```
 
-> 需要注意的是，尽管Scala中的命名方式，并且有些接近Scala、OCaml、Haskell等中的概念，请仍就不要将他们完全划上等号，在之后的示例中你会看到不少区别。
+> 需要注意的是，尽管使用了Scala中的命名方式，并且有些接近Scala、OCaml、Haskell等中的概念，请仍就不要将他们完全划上等号，在之后的示例中你会看到不少区别。
 
 一个特别的地方是，case是自带解包的，所有的case对象都有同样的解包方式：
 
@@ -225,9 +225,9 @@ $result = match(casing('show'), 'p1', 'p2');
 
 当一个match未处于封闭状态时，所有匹配都未命中时会抛出`\UnexpectedValueException`异常。
 
-### 特殊类型 :nothing
+### 特殊类型 unknown
 
-使用`match()`方法匹配的对象往往都是case，但也允许使用非case的值/变量进行匹配。这种情况下会使用`casetype()`函数获取匹配的对象的分类，**而不会将其包装成一个case**。当casetype无法在规则内获取其类型返回null时，会将其作为一个名为`nothing`的特殊case type参与匹配。
+使用`match()`方法匹配的对象往往都是case，但也允许使用非case的值/变量进行匹配。这种情况下会使用`casetype()`函数获取匹配的对象的分类，**而不会将其包装成一个case**。当casetype无法在规则内获取其类型返回null时，会将其作为一个名为`unknown`的特殊case type参与匹配。
 
 ### 函数列表 funcs 与 take()
 
