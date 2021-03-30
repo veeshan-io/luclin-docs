@@ -4,6 +4,8 @@
 
 > 当读完本章文档后可以回来品味这段话：在Luclin2的系统中`CaseClass`是可以用来实现类型和值的脱机转移的。而行为的脱机转移则需要用到下一章所说的领域业务模型`Context/Domain`机制来实现。
 
+> 使用php 8.1的`Fibers`来跑case业务，同时支持使用`Enums`来实现复杂`case class`，再配合php 8的`match`模式匹配实现fp编程
+
 ## 使用 CaseClass
 
 `CaseClass`是Luclin2中函数式编程的核心，它就像一个壳，把需要处理的数据包装起来，赋与其额外的意义，提供对函数式编程的支持。例如你有个字串`"hello"`，把它变成一个CaseClass的过程看起来是这样：
@@ -105,6 +107,12 @@ echo ($counter = raw($counter))(); // output 2
 
 !> Luclin2正在开发中，这部分转换规则可能会有所变动，待1.0 release后才会正式固定。欲了解具体计算方式请查看项目中`casetype()`函数源码。
 
+#### TODO: 自定义原类型转义
+
+```php
+rawDef(fn($v) => $v instanceof Collection ? 'collection' : null);
+```
+
 ### case type 的获取和比较
 
 使用以下方法获取和比较一个case的type
@@ -172,7 +180,11 @@ $url = $case(); // same as new Url('https://www.php.net/')
 
 > 隐式方法相关操作见后文详述。
 
+### TODO: casetype空间与自动载入
+
 ## 模式匹配 Match
+
+TODO: 模式匹配的实现需要在`php8`中重构一下
 
 有了CaseClass就可以通过模式匹配来实现流程控制，在这里我直接举一个现实一些的例子，也可以看出和其他直接支持FP的语言的差异性。
 
@@ -270,6 +282,13 @@ echo $case->length(); // output 5
 
 > 注意，如果在一个case type下连续注册同名方法，后面的注册函数会覆盖之前注册的，而不会在`funcs`中追加。你可以一次调用注册一组函数，但不能分批追加。
 
+TODO: 一次可以给多个`casetype`注入隐式方法：
+
+```php
+implicit('string', 'array')
+    ->toString(fn($case) => "$case");
+```
+
 ### 管道方法调用 Pipeline
 
 如果你试着使用case作为返回值，那么你已经摸到了实现管道调用的门道。首先根据case type声明各自的隐式方法，之后在方法中明确返回的是什么case type，这样可以自然而然地实现pipeline机制。我们把上面的方法改进一下，增加一个获取字串长度后将字串长度乘以5的需求。
@@ -307,6 +326,23 @@ implicit('string')
 - type
 - by
 - fun
+
+### TODO: 隐式方法类
+
+> 通过声明类的方式实现某个`casetype`的默认方法，一次可以绑多个类到`casetype`上。但连续调用会覆盖之前的绑定关系。
+
+例如：
+
+`implicit('type')(new Class1(), new Class2())`
+`implicit('type')(fn() => new Class1(), fn() => new Class2())`
+
+后面还能正常跟声明：
+
+```php
+implicit('string')(new Class1(), new Class2())
+    ->_(fn($case, $method, ...$params) => raw(Str::$method($case(), ...$params)));
+```
+
 
 ## 使用函子 Functor
 
